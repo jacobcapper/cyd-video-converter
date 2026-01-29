@@ -13,7 +13,7 @@ A hybrid web-based video converter for the ESP32-2432S028R (Cheap Yellow Display
 
 ## 🎬 Live Demo
 
-Visit: [https://yourusername.github.io/cyd-video-converter/](https://yourusername.github.io/cyd-video-converter/)
+Visit: [https://jacobcapper.github.io/cyd-video-converter/](https://jacobcapper.github.io/cyd-video-converter/)
 
 ## 📦 Deployment Options
 
@@ -219,13 +219,13 @@ MIT License - See LICENSE file for details.
 
 ## 🔗 Related Projects
 
-- [CYD Video Player](https://github.com/yourusername/cyd-video-player) - The Arduino firmware
+- [CYD Video Player](https://github.com/jacobcapper/cyd-video-player) - The Arduino firmware
 - [ESP32-2432S028R Resources](https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display) - Hardware info
 
 ## 💬 Support
 
-- Issues: [GitHub Issues](https://github.com/yourusername/cyd-video-converter/issues)
-- Discussions: [GitHub Discussions](https://github.com/yourusername/cyd-video-converter/discussions)
+- Issues: [GitHub Issues](https://github.com/jacobcapper/cyd-video-converter/issues)
+- Discussions: [GitHub Discussions](https://github.com/jacobcapper/cyd-video-converter/discussions)
 
 ## 🎉 Enjoy!
 
