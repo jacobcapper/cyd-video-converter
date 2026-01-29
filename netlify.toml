@@ -6,3 +6,25 @@
   [headers.values]
     Cross-Origin-Embedder-Policy = "require-corp"
     Cross-Origin-Opener-Policy = "same-origin"
+
+# Proxy unpkg requests through Netlify to add CORS
+[[redirects]]
+  from = "/cdn/core/*"
+  to = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/:splat"
+  status = 200
+  force = true
+  headers = {Access-Control-Allow-Origin = "*"}
+
+[[redirects]]
+  from = "/cdn/ffmpeg/*"
+  to = "https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/esm/:splat"
+  status = 200
+  force = true
+  headers = {Access-Control-Allow-Origin = "*"}
+
+[[redirects]]
+  from = "/cdn/util/*"
+  to = "https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/:splat"
+  status = 200
+  force = true
+  headers = {Access-Control-Allow-Origin = "*"}
