@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYD Video Converter - Convert Videos for ESP32 Display</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .browser-check {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .browser-check.show {
+            display: block;
+        }
+
+        .browser-check.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .browser-check.success {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .browser-check h3 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+
+        .browser-check.error h3 {
+            color: #721c24;
+        }
+
+        .browser-check.success h3 {
+            color: #155724;
+        }
+
+        .presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .preset-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .preset-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .preset-card.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .preset-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .preset-card p {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .preset-card .specs {
+            font-family: monospace;
+            font-size: 0.85em;
+            color: #888;
+            background: #f5f5f5;
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            background: #f0f4ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e8edff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+
+        .upload-area.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .upload-area h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .upload-area p {
+            color: #666;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .progress-container {
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        .progress-container.show {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .result-container {
+            display: none;
+            background: #f0f4ff;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .stat-box h4 {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-box p {
+            color: #667eea;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        .fallback-section {
+            display: none;
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+
+        .fallback-section.show {
+            display: block;
+        }
+
+        .fallback-section h3 {
+            color: #856404;
+            margin-bottom: 20px;
+        }
+
+        .script-box {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .copy-btn:hover {
+            background: #764ba2;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .presets {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 CYD Video Converter</h1>
+        <p class="subtitle">Convert videos for ESP32-2432S028R (Cheap Yellow Display)</p>
+
+        <!-- Browser Compatibility Check -->
+        <div id="browserCheck" class="browser-check">
+            <h3 id="browserCheckTitle">Checking browser compatibility...</h3>
+            <p id="browserCheckMessage"></p>
+        </div>
+
+        <!-- Presets -->
+        <div class="presets">
+            <div class="preset-card selected" data-preset="portal-15">
+                <h3>🌀 Portal (15fps)</h3>
+                <p>Smooth animation for magical portals</p>
+                <div class="specs">
+                    Quality: 9<br>
+                    FPS: 15<br>
+                    Best for: Reliable performance
+                </div>
+            </div>
+
+            <div class="preset-card" data-preset="portal-30">
+                <h3>⚡ Portal (30fps)</h3>
+                <p>Maximum smoothness</p>
+                <div class="specs">
+                    Quality: 11<br>
+                    FPS: 30<br>
+                    Best for: Fast SD cards
+                </div>
+            </div>
+
+            <div class="preset-card" data-preset="billboard">
+                <h3>📺 Billboard (10fps)</h3>
+                <p>For static or slow-moving ads</p>
+                <div class="specs">
+                    Quality: 5<br>
+                    FPS: 10<br>
+                    Best for: High quality stills
+                </div>
+            </div>
+
+            <div class="preset-card" data-preset="custom">
+                <h3>⚙️ Custom</h3>
+                <p>Set your own parameters</p>
+                <div class="specs">
+                    Quality: <input type="number" id="customQuality" value="9" min="1" max="31" style="width: 50px;">
+                    <br>
+                    FPS: <input type="number" id="customFps" value="15" min="1" max="60" style="width: 50px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Area -->
+        <div id="uploadArea" class="upload-area">
+            <div class="upload-icon">📤</div>
+            <h2>Drop your video here</h2>
+            <p>or click to browse</p>
+            <p style="font-size: 0.9em; color: #999; margin-top: 10px;">
+                Supports: MP4, AVI, MOV, MKV, WebM
+            </p>
+            <input type="file" id="fileInput" class="file-input" accept="video/*">
+        </div>
+
+        <!-- Progress -->
+        <div id="progressContainer" class="progress-container">
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill">0%</div>
+            </div>
+            <p class="progress-text" id="progressText">Initializing...</p>
+        </div>
+
+        <!-- Results -->
+        <div id="resultContainer" class="result-container">
+            <h2>✅ Conversion Complete!</h2>
+            <div class="result-stats">
+                <div class="stat-box">
+                    <h4>Original Size</h4>
+                    <p id="originalSize">-</p>
+                </div>
+                <div class="stat-box">
+                    <h4>Converted Size</h4>
+                    <p id="convertedSize">-</p>
+                </div>
+                <div class="stat-box">
+                    <h4>FPS</h4>
+                    <p id="resultFps">-</p>
+                </div>
+                <div class="stat-box">
+                    <h4>Duration</h4>
+                    <p id="conversionTime">-</p>
+                </div>
+            </div>
+            <button id="downloadBtn" class="btn">📥 Download MJPEG</button>
+            <button id="convertAnotherBtn" class="btn btn-secondary">🔄 Convert Another</button>
+        </div>
+
+        <!-- Fallback Section -->
+        <div id="fallbackSection" class="fallback-section">
+            <h3>⚠️ Browser Conversion Not Available</h3>
+            <p style="margin-bottom: 20px;">
+                Your browser doesn't support the required features for in-browser conversion.
+                No worries! Here are easy alternatives:
+            </p>
+
+            <h4>Option 1: Download & Run Script (Easiest)</h4>
+            <p style="margin: 10px 0;">Download the conversion script for your operating system:</p>
+            <button id="downloadScriptLinux" class="btn">🐧 Linux/Mac Script</button>
+            <button id="downloadScriptWindows" class="btn">🪟 Windows Script</button>
+
+            <h4 style="margin-top: 25px;">Option 2: Copy & Paste Command</h4>
+            <p style="margin: 10px 0;">Copy this command and run it in your terminal (requires FFmpeg):</p>
+            <div class="script-box">
+                <button class="copy-btn" onclick="copyCommand()">Copy</button>
+                <code id="ffmpegCommand">ffmpeg -i input.mp4 -vf "fps=15,scale=240:320:force_original_aspect_ratio=decrease,pad=240:320:(ow-iw)/2:(oh-ih)/2" -q:v 9 -f mjpeg output.mjpeg</code>
+            </div>
+
+            <h4 style="margin-top: 25px;">Need FFmpeg?</h4>
+            <p>
+                <strong>Windows:</strong> <a href="https://www.gyan.dev/ffmpeg/builds/" target="_blank">Download FFmpeg</a><br>
+                <strong>Mac:</strong> <code>brew install ffmpeg</code><br>
+                <strong>Linux:</strong> <code>sudo apt install ffmpeg</code> or <code>sudo pacman -S ffmpeg</code>
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>Made for ESP32-2432S028R (Cheap Yellow Display) • 
+            <a href="https://github.com/yourusername/cyd-video-player" target="_blank">GitHub</a></p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Configuration
+        const presets = {
+            'portal-15': { fps: 15, quality: 9, name: 'portal_15fps' },
+            'portal-30': { fps: 30, quality: 11, name: 'portal_30fps' },
+            'billboard': { fps: 10, quality: 5, name: 'billboard' },
+            'custom': { fps: 15, quality: 9, name: 'custom' }
+        };
+
+        let selectedPreset = 'portal-15';
+        let ffmpegLoaded = false;
+        let ffmpeg = null;
+        let selectedFile = null;
+
+        // Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const resultContainer = document.getElementById('resultContainer');
+        const browserCheck = document.getElementById('browserCheck');
+        const fallbackSection = document.getElementById('fallbackSection');
+
+        // Check browser compatibility
+        async function checkBrowserCompatibility() {
+            browserCheck.classList.add('show');
+
+            // Check for SharedArrayBuffer
+            if (typeof SharedArrayBuffer === 'undefined') {
+                browserCheck.classList.add('error');
+                document.getElementById('browserCheckTitle').textContent = '❌ In-Browser Conversion Not Supported';
+                document.getElementById('browserCheckMessage').innerHTML = 
+                    'Your browser doesn\'t support SharedArrayBuffer. Don\'t worry - scroll down for easy alternatives!';
+                uploadArea.classList.add('disabled');
+                fallbackSection.classList.add('show');
+                updateFallbackCommand();
+                return false;
+            }
+
+            try {
+                // Try to import FFmpeg
+                const { FFmpeg } = await import('https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/esm/index.js');
+                const { toBlobURL } = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
+                
+                ffmpeg = new FFmpeg();
+                
+                // Set up progress handler
+                ffmpeg.on('progress', ({ progress, time }) => {
+                    const percent = Math.round(progress * 100);
+                    progressFill.style.width = percent + '%';
+                    progressFill.textContent = percent + '%';
+                    progressText.textContent = `Converting... ${time / 1000000}s`;
+                });
+
+                // Load FFmpeg
+                progressText.textContent = 'Loading FFmpeg (this may take a moment)...';
+                progressContainer.classList.add('show');
+
+                const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+                await ffmpeg.load({
+                    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+                    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+                });
+
+                ffmpegLoaded = true;
+                progressContainer.classList.remove('show');
+
+                browserCheck.classList.add('success');
+                document.getElementById('browserCheckTitle').textContent = '✅ Browser Conversion Available!';
+                document.getElementById('browserCheckMessage').textContent = 
+                    'Your browser supports in-browser conversion. Drop a video to get started!';
+
+                setTimeout(() => {
+                    browserCheck.classList.remove('show');
+                }, 3000);
+
+                return true;
+            } catch (error) {
+                console.error('FFmpeg load error:', error);
+                browserCheck.classList.add('error');
+                document.getElementById('browserCheckTitle').textContent = '❌ Conversion Failed to Load';
+                document.getElementById('browserCheckMessage').innerHTML = 
+                    `Error: ${error.message}<br>Please use the fallback options below.`;
+                uploadArea.classList.add('disabled');
+                fallbackSection.classList.add('show');
+                updateFallbackCommand();
+                return false;
+            }
+        }
+
+        // Preset selection
+        document.querySelectorAll('.preset-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedPreset = card.dataset.preset;
+                updateFallbackCommand();
+            });
+        });
+
+        // File upload
+        uploadArea.addEventListener('click', () => {
+            if (!uploadArea.classList.contains('disabled')) {
+                fileInput.click();
+            }
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!uploadArea.classList.contains('disabled')) {
+                uploadArea.classList.add('dragover');
+            }
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (!uploadArea.classList.contains('disabled') && e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Handle file conversion
+        async function handleFile(file) {
+            if (!ffmpegLoaded) {
+                alert('FFmpeg not loaded. Please use fallback options below.');
+                return;
+            }
+
+            selectedFile = file;
+            const originalSize = file.size;
+            const startTime = Date.now();
+
+            // Get preset settings
+            let settings = presets[selectedPreset];
+            if (selectedPreset === 'custom') {
+                settings = {
+                    fps: parseInt(document.getElementById('customFps').value),
+                    quality: parseInt(document.getElementById('customQuality').value),
+                    name: 'custom'
+                };
+            }
+
+            // Show progress
+            resultContainer.classList.remove('show');
+            progressContainer.classList.add('show');
+            progressText.textContent = 'Reading file...';
+            progressFill.style.width = '0%';
+            progressFill.textContent = '0%';
+
+            try {
+                // Write input file
+                progressText.textContent = 'Preparing conversion...';
+                const inputData = new Uint8Array(await file.arrayBuffer());
+                await ffmpeg.writeFile('input.mp4', inputData);
+
+                // Run FFmpeg conversion
+                progressText.textContent = 'Converting video...';
+                await ffmpeg.exec([
+                    '-i', 'input.mp4',
+                    '-vf', `fps=${settings.fps},scale=240:320:force_original_aspect_ratio=decrease,pad=240:320:(ow-iw)/2:(oh-ih)/2`,
+                    '-q:v', settings.quality.toString(),
+                    '-f', 'mjpeg',
+                    'output.mjpeg'
+                ]);
+
+                // Read output file
+                progressText.textContent = 'Reading converted file...';
+                const outputData = await ffmpeg.readFile('output.mjpeg');
+
+                // Calculate stats
+                const endTime = Date.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(1);
+                const convertedSize = outputData.length;
+
+                // Show results
+                progressContainer.classList.remove('show');
+                resultContainer.classList.add('show');
+
+                document.getElementById('originalSize').textContent = formatSize(originalSize);
+                document.getElementById('convertedSize').textContent = formatSize(convertedSize);
+                document.getElementById('resultFps').textContent = settings.fps;
+                document.getElementById('conversionTime').textContent = duration + 's';
+
+                // Prepare download
+                const blob = new Blob([outputData], { type: 'video/mjpeg' });
+                const url = URL.createObjectURL(blob);
+                const downloadBtn = document.getElementById('downloadBtn');
+                downloadBtn.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${file.name.replace(/\.[^/.]+$/, '')}_${settings.name}.mjpeg`;
+                    a.click();
+                };
+
+                // Cleanup FFmpeg files
+                await ffmpeg.deleteFile('input.mp4');
+                await ffmpeg.deleteFile('output.mjpeg');
+
+            } catch (error) {
+                console.error('Conversion error:', error);
+                progressContainer.classList.remove('show');
+                alert('Conversion failed: ' + error.message + '\n\nPlease try the fallback options below.');
+                fallbackSection.classList.add('show');
+            }
+        }
+
+        // Convert another
+        document.getElementById('convertAnotherBtn').addEventListener('click', () => {
+            resultContainer.classList.remove('show');
+            fileInput.value = '';
+        });
+
+        // Format file size
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Update fallback command based on preset
+        function updateFallbackCommand() {
+            let settings = presets[selectedPreset];
+            if (selectedPreset === 'custom') {
+                settings = {
+                    fps: parseInt(document.getElementById('customFps').value) || 15,
+                    quality: parseInt(document.getElementById('customQuality').value) || 9
+                };
+            }
+
+            const command = `ffmpeg -i input.mp4 -vf "fps=${settings.fps},scale=240:320:force_original_aspect_ratio=decrease,pad=240:320:(ow-iw)/2:(oh-ih)/2" -q:v ${settings.quality} -f mjpeg output.mjpeg`;
+            document.getElementById('ffmpegCommand').textContent = command;
+        }
+
+        // Copy command to clipboard
+        window.copyCommand = function() {
+            const command = document.getElementById('ffmpegCommand').textContent;
+            navigator.clipboard.writeText(command).then(() => {
+                alert('Command copied to clipboard!');
+            });
+        };
+
+        // Download scripts
+        document.getElementById('downloadScriptLinux').addEventListener('click', () => {
+            downloadScript('bash');
+        });
+
+        document.getElementById('downloadScriptWindows').addEventListener('click', () => {
+            downloadScript('bat');
+        });
+
+        function downloadScript(type) {
+            let settings = presets[selectedPreset];
+            if (selectedPreset === 'custom') {
+                settings = {
+                    fps: parseInt(document.getElementById('customFps').value) || 15,
+                    quality: parseInt(document.getElementById('customQuality').value) || 9,
+                    name: 'custom'
+                };
+            }
+
+            let script, filename, mimeType;
+
+            if (type === 'bash') {
+                script = `#!/bin/bash
+# CYD Video Converter Script
+# Preset: ${selectedPreset}
+
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <input_video>"
+    exit 1
+fi
+
+INPUT="$1"
+BASENAME=$(basename "$INPUT" | sed 's/\\.[^.]*$//')
+OUTPUT="\${BASENAME}_${settings.name}.mjpeg"
+
+echo "Converting: $INPUT"
+echo "Output: $OUTPUT"
+echo "FPS: ${settings.fps}"
+echo "Quality: ${settings.quality}"
+echo ""
+
+ffmpeg -i "$INPUT" \\
+    -vf "fps=${settings.fps},scale=240:320:force_original_aspect_ratio=decrease,pad=240:320:(ow-iw)/2:(oh-ih)/2" \\
+    -q:v ${settings.quality} \\
+    -f mjpeg \\
+    "$OUTPUT"
+
+echo ""
+echo "✓ Done! Copy $OUTPUT to your CYD's SD card /videos/ directory"
+`;
+                filename = `convert_cyd_${settings.name}.sh`;
+                mimeType = 'text/x-shellscript';
+            } else {
+                script = `@echo off
+REM CYD Video Converter Script
+REM Preset: ${selectedPreset}
+
+if "%~1"=="" (
+    echo Usage: %~nx0 ^<input_video^>
+    exit /b 1
+)
+
+set INPUT=%~1
+for %%F in ("%INPUT%") do set BASENAME=%%~nF
+set OUTPUT=%BASENAME%_${settings.name}.mjpeg
+
+echo Converting: %INPUT%
+echo Output: %OUTPUT%
+echo FPS: ${settings.fps}
+echo Quality: ${settings.quality}
+echo.
+
+ffmpeg -i "%INPUT%" -vf "fps=${settings.fps},scale=240:320:force_original_aspect_ratio=decrease,pad=240:320:(ow-iw)/2:(oh-ih)/2" -q:v ${settings.quality} -f mjpeg "%OUTPUT%"
+
+echo.
+echo Done! Copy %OUTPUT% to your CYD's SD card /videos/ directory
+pause
+`;
+                filename = `convert_cyd_${settings.name}.bat`;
+                mimeType = 'text/plain';
+            }
+
+            const blob = new Blob([script], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Custom preset inputs
+        document.getElementById('customQuality').addEventListener('change', updateFallbackCommand);
+        document.getElementById('customFps').addEventListener('change', updateFallbackCommand);
+
+        // Initialize
+        checkBrowserCompatibility();
+    </script>
+</body>
+</html>
